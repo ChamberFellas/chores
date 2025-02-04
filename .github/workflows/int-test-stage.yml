@@ -1,0 +1,44 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches:
+      - staging
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Run Unit Tests
+        env:
+          PORT: 3002
+        run: yarn test
+
+  integration_tests:
+    needs: unit_tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Fetch Other Service Images
+        run: docker pull weeturtle/OtherMicroservice:latest
+
+      - name: Fetch integration tests
+        run: echo "Fetching integration tests"
+
+      - name: Build Docker Image
+        env:
+          PORT: 3002
+        run: docker build -t weeturtle/MicroserviceTemplate:${{ github.sha }} .
+
+      - name: Run Integration Tests
+        run: echo "Running Integration Tests"
