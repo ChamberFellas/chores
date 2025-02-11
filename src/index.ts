@@ -12,9 +12,9 @@ app.use(router);
 if (process.env.NODE_ENV !== "test") {
   if (!process.env.PORT) {
     console.error("PORT is not defined");
-    process.exit(1);
+    console.log("Setting port to default: 3000");
   }
-  const PORT = process.env.PORT;
+  const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
