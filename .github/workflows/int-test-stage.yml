@@ -19,7 +19,7 @@ jobs:
       - name: Run Unit Tests
         env:
           PORT: 3002
-        run: yarn test
+        run: yarn test-unit
 
   integration_tests:
     needs: unit_tests
