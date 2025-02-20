@@ -1,20 +1,9 @@
 import express from "express";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import { createContext } from "./trpc";
 import dotenv from "dotenv";
 dotenv.config();
-
 import router from "./routes";
-import { appRouter } from "./trpc";
 
 export const app = express();
-app.use(
-  "/trpc",
-  trpcExpress.createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  }),
-);
 
 app.use(express.json());
 
