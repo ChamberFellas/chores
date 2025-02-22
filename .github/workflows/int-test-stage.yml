@@ -18,7 +18,7 @@ jobs:
 
       - name: Run Unit Tests
         env:
-          PORT: 3002
+          PORT: 3000
         run: yarn test-unit
 
   integration_tests:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Docker Image
         env:
-          PORT: 3002
+          PORT: 3000
         run: docker build -t weeturtle/${{ github.event.repository.name }}:${{ github.sha }} .
 
       - name: Run Integration Tests
