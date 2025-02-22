@@ -38,10 +38,10 @@ jobs:
       - name: Build Docker Image
         env:
           PORT: 3002
-        run: docker build -t weeturtle/MicroserviceTemplate:${{ github.sha }} .
+        run: docker build -t weeturtle/${{ github.event.repository.name }}:${{ github.sha }} .
 
       - name: Push Docker Image
-        run: docker push weeturtle/MicroserviceTemplate:${{ github.sha }}
+        run: docker push weeturtle/${{ github.event.repository.name }}:${{ github.sha }}
 
       - name: Deploy Docker Image
         run: echo "Would deploy to cloud service"

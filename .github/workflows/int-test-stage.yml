@@ -29,16 +29,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Fetch Other Service Images
-        run: docker pull weeturtle/OtherMicroservice:latest
+      # - name: Fetch And Run Other Service Images
+      #   run: docker pull weeturtle/OtherMicroservice:latest
 
-      - name: Fetch integration tests
+      - name: Setup Integration Tests
         run: echo "Fetching integration tests"
 
       - name: Build Docker Image
         env:
           PORT: 3002
-        run: docker build -t weeturtle/MicroserviceTemplate:${{ github.sha }} .
+        run: docker build -t weeturtle/${{ github.event.repository.name }}:${{ github.sha }} .
 
       - name: Run Integration Tests
         run: echo "Running Integration Tests"
