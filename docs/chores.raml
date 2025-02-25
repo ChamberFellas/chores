@@ -1,0 +1,112 @@
+#%RAML 1.0
+---
+title: chores API
+baseUri: http://api.chores.com
+version: v1
+
+/todo:
+  get:
+    queryParameters:
+      member:
+	displayName: Member
+	type: string
+	description: name of a household member
+	example: Shatakshi Sherikar
+	required: false
+      category:
+	displayName: Category
+	type: string
+	description: specific chore
+	example: washing dishes
+	required: false
+      responses:
+	200:
+	  body:
+	    application/json:
+	      example:
+		{
+		  "data": {
+                    "task": "take bins out",
+                    "member": "Shatakshi Sherikar",
+                    "deadline": "21/02/2025",
+                    "state": "incomplete",
+                  },
+                  "success": true,
+                  "status": 200
+                }
+  put:
+    queryParameters:
+      access_token:
+	displayName: Access Token
+	type: string
+	description: Token giving you permission to edit if you created chore
+	required: true
+  post:
+    queryParameters:
+      task:
+        description: "choose from the category"
+        example: "vacuum living room"
+        required: true
+        type: string
+      member:
+        description: "The person assigned to do the chore"
+        example: "Shatakshi Sherikar"
+        required: true
+        type: string
+      deadline:
+        description: "The date the chore must be completed by"
+        example: 21/02/2025
+        required: true
+        type: date
+  delete:
+    queryParameters:
+      access_token:
+	displayName: Access Token
+	type: string
+	description: Token giving you permission to delete chore if you created chore
+	required: true
+  /member:
+    get:
+    put:
+  /categories:
+    get:
+    post:
+  /completed:
+    get:
+    put:
+/completed:
+  get:
+    queryParameters:
+      member:
+	displayName: Member
+	type: string
+	description: name of a household member
+	example: Shatakshi Sherikar
+	required: false
+      category:
+	displayName: Category
+	type: string
+	description: specific chore
+	example: washing dishes
+	required: false
+      responses:
+	200:
+	  body:
+	    application/json:
+	      example:
+		{
+		  "data": {
+                    "task": "take bins out",
+                    "member": "Shatakshi Sherikar",
+                    "deadline": "21/02/2025",
+                    "state": "complete",
+                  },
+                  "success": true,
+                  "status": 200
+                }
+  put:
+    description: "Other members can contest the completed chores"
+  /member:
+    get:
+  /categories:
+    get:
