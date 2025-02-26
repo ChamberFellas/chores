@@ -35,13 +35,47 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSKEY }}
 
+      - name: Extract version info
+        id: version
+        run: |
+          # Use short SHA for the tag
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "repo_name=${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
+
       - name: Build Docker Image
         env:
           PORT: 3000
-        run: docker build -t weeturtle/${{ github.event.repository.name }}:${{ github.sha }} .
+        run: |
+          docker build -t weeturtle/${{ steps.version.outputs.repo_name }}:${{ github.sha }} .
+          docker tag weeturtle/${{ steps.version.outputs.repo_name }}:${{ github.sha }} weeturtle/${{ steps.version.outputs.repo_name }}:latest
 
       - name: Push Docker Image
-        run: docker push weeturtle/${{ github.event.repository.name }}:${{ github.sha }}
+        run: |
+          docker push weeturtle/${{ steps.version.outputs.repo_name }}:${{ github.sha }}
+          docker push weeturtle/${{ steps.version.outputs.repo_name }}:latest
 
-      - name: Deploy Docker Image
-        run: echo "Would deploy to cloud service"
+      - name: Update Kubernetes configuration
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          NEW_TAG: ${{ github.sha }}
+          REPO_NAME: ${{ steps.version.outputs.repo_name }}
+          CONFIG_REPO: ChamberFellas/kustomize-config
+        run: |
+          # Clone the k8s config repository
+          git clone https://x-access-token:${GH_TOKEN}@github.com/${CONFIG_REPO}.git config-repo
+          cd config-repo
+
+          # Update the image tag in kustomization.yaml
+          # Path pattern should match your k8s config repo structure
+          sed -i "s|newTag: .*|newTag: ${NEW_TAG}|" apps/${REPO_NAME}/overlays/prod/kustomization.yaml
+
+          # Commit and push the changes
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Update ${REPO_NAME} image to ${NEW_TAG}"
+          git push
+
+      - name: Deployment Notification
+        run: echo "Image updated in k8s-config repo. ArgoCD will deploy the new version."
