@@ -59,6 +59,4 @@ jobs:
           image-tag: ${{ needs.build.outputs.image_tag }}
 
       - name: Deployment Notification
-        uses: username/repository-name@v1
-        with:
-          message: "Image updated in k8s-config repo. ArgoCD will deploy the new version."
+        run: echo "Image updated in k8s-config repo. ArgoCD will deploy the new version."
