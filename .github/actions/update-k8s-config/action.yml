@@ -20,17 +20,15 @@ runs:
     - name: Clone the k8s config repo
       shell: bash
       run: |
+        # Clone the k8s config repository
         git clone https://x-access-token:${{ inputs.gh-token }}@github.com/${{ inputs.config-repo }}.git config-repo
-
-    - name: Update the image tag in kustomization.yaml
-      shell: bash
-      run: |
         cd config-repo
+
+        # Update the image tag in kustomization.yaml
+        # Path pattern should match your k8s config repo structure
         sed -i "s|newTag: .*|newTag: ${{ inputs.image-tag }}|" apps/${{ inputs.repo-name }}-app/overlays/prod/kustomization.yaml
 
-    - name: Commit and Push Changes
-      shell: bash
-      run: |
+        # Commit and push the changes
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git add .
