@@ -21,12 +21,12 @@ runs:
       shell: bash
       run: |
         git clone https://x-access-token:${{ inputs.gh-token }}@github.com/${{ inputs.config-repo }}.git config-repo
-        cd config-repo
 
     - name: Update the image tag in kustomization.yaml
       shell: bash
       run: |
-        sed -i "s|newTag: .*|newTag: ${image-tag}|" apps/${{ inputs.repo-name }}-app/overlays/prod/kustomization.yaml
+        cd config-repo
+        sed -i "s|newTag: .*|newTag: ${{ inputs.image-tag }}|" apps/${{ inputs.repo-name }}-app/overlays/prod/kustomization.yaml
 
     - name: Commit and Push Changes
       shell: bash
