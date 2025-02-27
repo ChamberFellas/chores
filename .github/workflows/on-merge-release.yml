@@ -6,6 +6,12 @@ on:
       - main
 
 jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
   unit_tests:
     runs-on: ubuntu-latest
     steps:
