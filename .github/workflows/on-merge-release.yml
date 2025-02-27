@@ -28,7 +28,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Extract Version Info
+        id: version
         uses: ./.github/actions/generate-version
+
+      - name: Echo Version Info
+        run: |
+          echo "Version Info: ${{ steps.version.outputs.short_sha }}"
 
       - name: Build and Push Docker Image
         uses: ./.github/actions/docker-build
