@@ -34,5 +34,5 @@ runs:
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git add .
-        git commit -m "Update ${inputs.repo-name} image to ${inputs.image-tag}"
+        git commit -m "Update ${{ inputs.repo-name }} image to ${{ inputs.image-tag }}"
         git push
