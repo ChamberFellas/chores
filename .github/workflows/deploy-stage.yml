@@ -68,7 +68,7 @@ jobs:
 
           # Update the image tag in kustomization.yaml
           # Path pattern should match your k8s config repo structure
-          sed -i "s|newTag: .*|newTag: ${NEW_TAG}|" apps/${REPO_NAME}/overlays/prod/kustomization.yaml
+          sed -i "s|newTag: .*|newTag: ${NEW_TAG}|" apps/${REPO_NAME}-app/overlays/prod/kustomization.yaml
 
           # Commit and push the changes
           git config user.name "GitHub Actions"
