@@ -6,4 +6,8 @@ router.get("/status", (_, res) => {
   res.status(200).json({ status: "OK" });
 });
 
+router.get("/health", (_, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
 export default router;
