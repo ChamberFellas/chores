@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chores-deployment
+  labels:
+    app: chores
+spec:
+  selector:
+    matchLabels:
+      app: chores
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: chores
+    spec:
+      containers:
+      - name: chores-container
+        image: weeturtle/chores:latest
+        env:
+        - name: PORT
+          value: '3000'
+        ports:
+        - name: chores-service
+          containerPort: 3000
