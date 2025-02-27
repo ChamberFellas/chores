@@ -30,10 +30,6 @@ jobs:
       - name: Extract Version Info
         uses: ./.github/actions/generate-version
 
-      - name: Echo Version Info
-        run: |
-          echo "Version Info: ${{ steps.version.outputs.short_sha }}"
-
       - name: Build and Push Docker Image
         uses: ./.github/actions/docker-build
         with:
