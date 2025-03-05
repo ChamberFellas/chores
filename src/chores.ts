@@ -1,13 +1,10 @@
 import { number } from "zod";
-
+import { connectDB, disconnectDB} from "./database";
 const mongoose = require('mongoose');
 
 // DO NOT CHANGE THIS URL
 
-mongoose.connect('mongodb+srv://shared_user:adDk4wkyBvIv5X4p@cluster.mongodb.net/myDatabase', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+connectDB()
 
 // CREATE ALL TABLES/SCHEMAS
 
