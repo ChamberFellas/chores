@@ -1,12 +1,17 @@
 import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
+import { mongo } from "mongoose";
+import express, {Express, Request, Response} from "express"
 const mongoose = require('mongoose');
-const express = require('express');
 const app = express();
+const path = require('path')
 // DO NOT CHANGE THIS URL
 
 connectDB()
 
+app.use(express.static(path.join(__dirname, '../react-app/frontend')))
+
+/*
 mongoose.connect('mongodb+srv://shared_user:adDk4wkyBvIv5X4p@bills.jtyzd.mongodb.net/?retryWrites=true&w=majority&appName=Bills')
     .then(() => {
         console.log("Connected to db!")
@@ -14,6 +19,7 @@ mongoose.connect('mongodb+srv://shared_user:adDk4wkyBvIv5X4p@bills.jtyzd.mongodb
     .catch((error: any) => {
         console.log("error",error)
     });
+*/
 
 // CREATE ALL TABLES/SCHEMAS
 
@@ -74,3 +80,23 @@ const rotaSchema = new mongoose.Schema({
     rank: Number
 })
 
+const Chore = mongoose.model('Chore', choresSchema);
+const Issue = mongoose.model('Issue', issuesSchema);
+const Rota = mongoose.model('Rota', rotaSchema);
+
+app.use(express.urlencoded({extended: true}))
+
+app.get('/chores', async (req: Request, res: Response) => {
+    const chores = await Chore.find({})
+    res.render('chores/show', {chores})
+})
+
+app.get('/chores/new', (req: Request, res: Response) => {
+    res.render('chores/new')
+})
+
+app.post('/chores', async(req: Request, res: Response) => {
+    const newChore = new Chore(req.body);
+    await newChore.save();
+    res.redirect('chores/show')
+})
