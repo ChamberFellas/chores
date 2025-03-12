@@ -9,18 +9,6 @@ const path = require('path')
 
 connectDB()
 
-app.use(express.static(path.join(__dirname, '../react-app/frontend')))
-
-/*
-mongoose.connect('mongodb+srv://shared_user:adDk4wkyBvIv5X4p@bills.jtyzd.mongodb.net/?retryWrites=true&w=majority&appName=Bills')
-    .then(() => {
-        console.log("Connected to db!")
-    })
-    .catch((error: any) => {
-        console.log("error",error)
-    });
-*/
-
 // CREATE ALL TABLES/SCHEMAS
 
 const choresSchema = new mongoose.Schema({
@@ -100,3 +88,4 @@ app.post('/chores', async(req: Request, res: Response) => {
     await newChore.save();
     res.redirect('chores/show')
 })
+
