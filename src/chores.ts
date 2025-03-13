@@ -2,6 +2,7 @@ import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
 import mongoose, { mongo } from "mongoose";
 import express, {Express, Request, Response} from "express"
+import axios from "axios"
 const app = express();
 // DO NOT CHANGE THIS URL
 
@@ -84,6 +85,10 @@ app.get('/chores/new', (req: Request, res: Response) => {
 app.post('/chores', async(req: Request, res: Response) => {
     const newChore = new Chore(req.body);
     await newChore.save();
+
+    // Replace the link with the actual url
+
+    await axios.post('http://notifications-service:POST/notify', newChore)
     res.redirect('chores/show')
 })
 
