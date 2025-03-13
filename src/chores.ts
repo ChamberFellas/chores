@@ -1,10 +1,8 @@
 import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
-import { mongo } from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import express, {Express, Request, Response} from "express"
-const mongoose = require('mongoose');
 const app = express();
-const path = require('path')
 // DO NOT CHANGE THIS URL
 
 connectDB()
