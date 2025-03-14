@@ -1,8 +1,10 @@
 import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
 import mongoose, { mongo } from "mongoose";
-import express, {Express, Request, Response} from "express"
-import axios from "axios"
+import express, {Express, Request, Response} from "express";
+import axios from "axios";
+// I have tried importing method override but I keep getting errors
+const methodOverride = require("method-override");
 const app = express();
 // DO NOT CHANGE THIS URL
 
@@ -72,10 +74,11 @@ const Issue = mongoose.model('Issue', issuesSchema);
 const Rota = mongoose.model('Rota', rotaSchema);
 
 app.use(express.urlencoded({extended: true}))
+app.use(methodOverride('_method'))
 
 app.get('/chores', async (req: Request, res: Response) => {
     const chores = await Chore.find({})
-    res.render('chores/show', {chores})
+    res.render('chores/index', {chores})
 })
 
 app.get('/chores/new', (req: Request, res: Response) => {
@@ -85,10 +88,29 @@ app.get('/chores/new', (req: Request, res: Response) => {
 app.post('/chores', async(req: Request, res: Response) => {
     const newChore = new Chore(req.body);
     await newChore.save();
-
+    res.redirect('chores/index')
     // Replace the link with the actual url
-
     await axios.post('http://notifications-service:POST/notify', newChore)
     res.redirect('chores/show')
 })
+    
+
+app.get('/chores/:id', async (req: Request, res: Response) => {
+    const {id} = req.params;
+    const chore = await Chore.findById(id);
+    res.render('chores/show', {chore})
+})
+
+app.get('/chores/:id/edit', async (req: Request, res: Response) => {
+    const {id} = req.params;
+    const chore = await Chore.findById(id);
+    res.render('chores/edit', {chore})
+})
+
+app.put('/chores/:id', async (req: Request, res: Response) => {
+    const {id} = req.params;
+    const chore = await Chore.findByIdAndUpdate(id, req.body, {runValidators: true, new: true});
+    res.redirect('chores/index')
+})
+
 
