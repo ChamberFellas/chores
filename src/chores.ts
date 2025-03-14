@@ -91,7 +91,7 @@ app.post('/chores', async(req: Request, res: Response) => {
     res.redirect('chores/index')
     // Replace the link with the actual url
     await axios.post('http://notifications-service:POST/notify', newChore)
-    res.redirect('chores/show')
+    res.redirect('/chores')
 })
     
 
@@ -107,10 +107,14 @@ app.get('/chores/:id/edit', async (req: Request, res: Response) => {
     res.render('chores/edit', {chore})
 })
 
+app.delete('/chores/:id', async(req: Request, res: Response) => {
+    const {id} = req.params;
+    const deletedChore = await Chore.findByIdAndDelete(id);
+    res.redirect('/chores')
+})
+
 app.put('/chores/:id', async (req: Request, res: Response) => {
     const {id} = req.params;
     const chore = await Chore.findByIdAndUpdate(id, req.body, {runValidators: true, new: true});
-    res.redirect('chores/index')
+    res.redirect('/chores')
 })
-
-
