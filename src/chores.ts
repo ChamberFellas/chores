@@ -25,16 +25,16 @@ const choresSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    dateAssigned: {
-        type: Date,
-        required: false,
-        default: new Date()
-    },
     repeatEvery: {
         type: Number,
         required: false,
         min: 0,
         default: 0
+    },
+    dateAssigned: {
+        type: Date,
+        required: false,
+        default: new Date()
     },
     status:{
         type: String,
@@ -45,7 +45,8 @@ const choresSchema = new mongoose.Schema({
     },
     completionAdded:{
         type: Date,
-        required: false
+        required: false,
+        default: null
     },
     verifiedCount:{
         type: Number,
@@ -81,40 +82,51 @@ app.get('/chores', async (req: Request, res: Response) => {
     res.render('chores/index', {chores})
 })
 
+app.get('/chores/todo/:id', async(req: Request, res: Response) => {
+    const {userid} = req.params;
+    const todo = Chore.find({'status': 'incomplete', 'userID': userid})
+    res.render('chores/index', {todo})
+})
+
+app.get('/chores/completed', async(req: Request, res: Response) => {
+    const completed = Chore.find({'status': 'complete', 'completionAdded' : {$gte: new Date()}})
+    res.render('chores/index', {completed})
+})
+
 app.get('/chores/new', (req: Request, res: Response) => {
-    res.render('chores/new')
+    res.render('chores/new');
 })
 
 app.post('/chores', async(req: Request, res: Response) => {
     const newChore = new Chore(req.body);
     await newChore.save();
-    res.redirect('chores/index')
     // Replace the link with the actual url
-    await axios.post('http://notifications-service:POST/notify', newChore)
-    res.redirect('/chores')
+    await axios.post('http://notifications-service:POST/notify', newChore);
+    res.redirect('/chores');
 })
     
 
 app.get('/chores/:id', async (req: Request, res: Response) => {
     const {id} = req.params;
     const chore = await Chore.findById(id);
-    res.render('chores/show', {chore})
+    res.render('chores/show', {chore});
 })
 
 app.get('/chores/:id/edit', async (req: Request, res: Response) => {
     const {id} = req.params;
     const chore = await Chore.findById(id);
-    res.render('chores/edit', {chore})
+    res.render('chores/edit', {chore});
 })
 
 app.delete('/chores/:id', async(req: Request, res: Response) => {
     const {id} = req.params;
     const deletedChore = await Chore.findByIdAndDelete(id);
-    res.redirect('/chores')
+    res.redirect('/chores');
 })
 
 app.put('/chores/:id', async (req: Request, res: Response) => {
     const {id} = req.params;
     const chore = await Chore.findByIdAndUpdate(id, req.body, {runValidators: true, new: true});
-    res.redirect('/chores')
+    await axios.post('http://notifications-service:POST/notify', chore);
+    res.redirect('/chores');
 })
