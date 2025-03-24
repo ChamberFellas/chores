@@ -82,16 +82,17 @@ app.use(methodOverride('_method'))
 // Get all chores
 
 app.get('/:houseid/chores', async (req: Request, res: Response) => {
-    
-    const chores = await Chore.find({})
+
+    const chores = await Chore.find({houseID: req.params})
     res.render('chores/index', {chores})
 })
 
 // Get all chores that the current user needs to do
 
-app.get('/chores/todo/:id', async(req: Request, res: Response) => {
-    const {userid} = req.params;
-    const todo = Chore.find({'status': 'incomplete', 'userID': userid})
+app.get('/:houseid/chores/todo/:userid', async(req: Request, res: Response) => {
+    const userid = req.params.userid;
+    const houseid = req.params.houseid;
+    const todo = Chore.find({'status': 'incomplete', 'userID': userid, 'houseID': houseid})
     res.render('chores/index', {todo})
 })
 
@@ -154,8 +155,11 @@ app.get('/chores/new', (req: Request, res: Response) => {
 
 // New chore is posted to the database
 
-app.post('/chores', async(req: Request, res: Response) => {
-    const newChore = new Chore(req.body);
+app.post('/:userid/:houseid/chores', async(req: Request, res: Response) => {
+    const {description, deadline, repeatEvery, dateAssigned} = req.body;
+    const userID = req.params.userid;
+    const houseID = req.params.houseid;
+    const newChore = new Chore({userID, houseID, description, deadline, repeatEvery, dateAssigned});
     await newChore.save();
     // Replace the link with the actual url
     await axios.post('http://notifications-service:POST/notify', newChore);
@@ -172,7 +176,7 @@ app.get('/chores/:id', async (req: Request, res: Response) => {
 
 // Route for user to edit specific chore from the todo list/mark chore as completed
 
-app.get('/chores/:id/edit', async (req: Request, res: Response) => {
+app.get('/chores/todo/:id/edit', async (req: Request, res: Response) => {
     const {id} = req.params;
     const chore = await Chore.findById(id);
     res.render('chores/edit', {chore});
@@ -180,7 +184,7 @@ app.get('/chores/:id/edit', async (req: Request, res: Response) => {
 
 // Deletes a chore from the database
 
-app.delete('/chores/:id', async(req: Request, res: Response) => {
+app.delete('/chores/*/:id', async(req: Request, res: Response) => {
     const {id} = req.params;
     const deletedChore = await Chore.findByIdAndDelete(id);
     res.redirect('/chores');
