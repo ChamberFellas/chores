@@ -81,7 +81,8 @@ app.use(methodOverride('_method'))
 
 // Get all chores
 
-app.get('/chores', async (req: Request, res: Response) => {
+app.get('/:houseid/chores', async (req: Request, res: Response) => {
+    
     const chores = await Chore.find({})
     res.render('chores/index', {chores})
 })
@@ -119,13 +120,20 @@ app.get('/chores/completed/:id/confirmation', async(req: Request, res: Response)
 
 // Updates VerifiedCount depending on whether user confirms or rejects task completion
 
-app.put('/chores/completed/:id', async(req: Request, res: Response) => {
-    const {id} = req.params;
+app.put(':userid/:houseid/chores/completed/:id', async(req: Request, res: Response) => {
+    const id = req.params.id;
+    const userid = req.params.userid;
     const data = req.body;
     if (data.confirm === "True") {
         const chore = await Chore.findByIdAndUpdate(id, {$inc: {verifiedCount: 1}})
     } else if (data.confirm === "False") {
         const chore = await Chore.findByIdAndUpdate(id, {$inc: {verifiedCount: -1}})
+        if (data.comment) {
+            const newComment = new Issue({choreID: id, userID: userid, comment: data.comment, anonymous: data.anonymous})
+            await newComment.save();
+            await axios.post('http://notifications-service:POST/notify', newComment);
+            res.redirect("/chores/completed")
+        }
     }
 
     const verified = await Chore.findById(id).get("verifiedCount")
@@ -135,7 +143,7 @@ app.put('/chores/completed/:id', async(req: Request, res: Response) => {
     } else {
         const chore = await Chore.findByIdAndUpdate(id, {"status": "complete"});
     }
-    res.redirect('/chores/completed')
+    res.redirect('/chores/completed/:id/')
 })
 
 // User can create a new chore on this page
