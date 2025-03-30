@@ -1,6 +1,6 @@
 import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
-import mongoose, { mongo } from "mongoose";
+import mongoose, { mongo, Types } from "mongoose";
 import express, {Express, Request, Response} from "express";
 import axios from "axios";
 // I have tried importing method override but I keep getting errors
@@ -200,7 +200,47 @@ app.put('/chores/todo/:id', async (req: Request, res: Response) => {
         const contestPeriod = new Date();
         contestPeriod.setDate(contestPeriod.getDate() + 1);
         const chore = await Chore.findByIdAndUpdate(id, {completionAdded: contestPeriod}, {runValidators: true, new: true})
+        if (data.repeat != 0) {
+            const userid = data.userid;
+            const houseid = data.houseid;
+            const description = data.description;
+            const repeat = data.repeat;
+            const dateAssigned = new Date();
+            dateAssigned.setDate(data.dateassigned + repeat);
+            const deadline = new Date();
+            deadline.setDate(data.deadline + repeat);
+            const newChore = new Chore({userid, houseid, description, deadline, dateAssigned, repeat})
+            await newChore.save();
+            await axios.post('http://notifications-service:POST/notify', newChore);
+        }
     }
     await axios.post('http://notifications-service:POST/notify', chore);
     res.redirect('/chores');
 })
+
+/*
+const test123 = async () => {
+    const seedProducts =
+    {
+        _id: new Types.ObjectId(),
+        userID: [new Types.ObjectId(), new Types.ObjectId()],
+        houseID: [new Types.ObjectId()],
+        description: "blah blah blah",
+        deadline: new Date('2025-03-29'),
+        dateAssigned: new Date(),
+        repeatEvery: 7,
+        status: 'incomplete',
+        completionAdded: null,
+        verifiedCount: 0
+    }
+    try {
+        console.log(seedProducts)
+        const response = await axios.post('http://172.26.92.10:3000/chores', seedProducts);
+        console.log('Response:', response.data);
+    } catch (error: any) {
+        console.error('Error:', error.response?.data || error.message);
+    }
+}
+
+test123();
+*/
