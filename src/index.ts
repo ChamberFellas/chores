@@ -10,9 +10,9 @@ export const app = express();
 app.use(express.json());
 
 app.use(router);
-app.use(choreRouter);
 
 if (process.env.NODE_ENV !== "test") {
+  app.use(choreRouter);
   if (!process.env.PORT) {
     console.error("PORT is not defined");
     console.log("Setting port to default: 3000");
@@ -23,3 +23,5 @@ if (process.env.NODE_ENV !== "test") {
     connectDB();
   });
 }
+
+export default app;
