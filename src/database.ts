@@ -1,15 +1,21 @@
-// mongodb+srv://<db_username>:<db_password>@bills.jtyzd.mongodb.net/?retryWrites=true&w=majority&appName=Bills
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import { config } from "dotenv";
+
+config();
+
+const MONGO_URI = process.env.MONGO_URI || "";
+
 export async function connectDB() {
-    mongoose.connect('mongodb+srv://shared_user:adDk4wkyBvIv5X4p@bills.jtyzd.mongodb.net/?retryWrites=true&w=majority&appName=Bills')
-        .then(() => {
-            console.log("Connected to db!")
-        })
-        .catch((error) => {
-            console.log("error",error)
-        });
+  mongoose
+    .connect(MONGO_URI)
+    .then(() => {
+      console.log("Connected to db!");
+    })
+    .catch((error) => {
+      console.log("error", error);
+    });
 }
 
-export async function disconnectDB(){
-    await mongoose.connection.close();
+export async function disconnectDB() {
+  await mongoose.connection.close();
 }
