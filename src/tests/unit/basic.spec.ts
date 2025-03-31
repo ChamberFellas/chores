@@ -1,94 +1,210 @@
-import request from "supertest";
-import { app } from "../../index";
+import request from 'supertest';
+import express, { Request, Response } from 'express';
+import {app, Chore} from '../../chores'; // Adjust the import path if necessary
+import {connectDB} from '../../database';
+import {Types} from "mongoose";
+import axios from "axios";
+ // Assuming your app is exported from chores.ts
 
-describe("GET /", () => {
-  it("should return 200", async () => {
-    const response = await request(app).get("/status");
-    expect(response.status).toBe(200);
-  });
+// Mock the Chore model
+jest.mock('../../chores', () => {
+    const originalModule = jest.requireActual('../../chores');
+    return {
+        ...originalModule,
+        Chore: {
+            find: jest.fn(),
+        },
+    };
 });
 
-// Proposed tests
+describe('GET /:houseid/chores', () => {
 
-// ADDING CHORES (dep. NONE)
+      let seedProducts: any;
 
-  // chore name cannot be NULL and is less than (20 chars)
+      beforeEach(() => {
+          jest.clearAllMocks();
 
-  // chore desc cannot be NULL and is less than (100 chars)
+          seedProducts =
+          [{
+              _id: new Types.ObjectId(),
+              userID: [new Types.ObjectId(), new Types.ObjectId()],
+              houseID: "house1",
+              description: "blah blah blah",
+              deadline: new Date('2025-03-29'),
+              dateAssigned: new Date(),
+              repeatEvery: 7,
+              status: 'incomplete',
+              completionAdded: null,
+              verifiedCount: 0
+          }]
+      })
 
-  // chore deadline boundary tests 
-    // deadline yesterday FAILS
-    // deadline today FAILS
-    // deadline tomorrow PASSES
+      test("Can find chores", async () => {
 
-  // person assigned to must be in the house.
-  // person assigned to must not be NULL
+        jest.spyOn(Chore, "find").mockResolvedValue(seedProducts);
 
-  // if everything above applies:
-    // cannot add chore if there is less than one person in the house.
-    // Otherwise add chore with relevant data. 
+        jest.spyOn(app.response, "render").mockImplementation(() => {
+          return app.response.end;
+        });
 
-// EDITING EXISTING CHORE (dep. ADDING)
+        const response = await request(app).get('/house1/chores')
+        expect(response.status).toBe(200);
 
- // changing existing chore name to NULL (FAILS)
+      })
+});
 
- // changing existing chore desc to NULL (FAILS)
+describe("To do list", () => {
 
- // changing chore deadlines to invalid times (FAILS)
+  let seedProducts: any;
 
- // Cannot change person to NULL
- // cannot Change person to themselves. IE if Ayushi is assigned to a chore, you cannot edit assignee to Ayushi
- // cannot change person to someone outside the house or does not exist.
+  beforeEach(() => {
+    jest.clearAllMocks();
 
- // If all above applies 
-  // Any attempt to edit a chore is rejected if person making the edit does not match person who created the chore.
-  // Cannot edit a chore if there is less than one person in the house.
+    seedProducts =
+      [{
+        _id: new Types.ObjectId("123456789abcdef123456789"),
+        userID: [new Types.ObjectId("aaaabbbbccccddddeeeeffff"), new Types.ObjectId("111122223333444455556666")],
+        houseID: "house1",
+        description: "blah blah blah",
+        deadline: new Date('2025-03-29'),
+        dateAssigned: new Date(),
+        repeatEvery: 7,
+        status: 'incomplete',
+        completionAdded: null,
+        verifiedCount: 0
+      }]
+  })
 
-// DELETING A CHORE (dep. ADDING)
+  test("Returns all chores where some chores incomplete", async() => {
 
-  // Any attempt to delete a chore rejected if person making the deletion does not match person who created/
-  // Cannot delete archived chores
+    jest.spyOn(Chore, "find").mockResolvedValue(seedProducts)
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
 
-// MARKING A COMPLETION (dep. EDITING)
-
-  // status must be "incomplete" before marking it as complete. FAIL if status is different
-  // current date must be before the deadline.
-  // completion can only be marked by the person who is assigned the chore.
-
-  // if above is ok
-    // change status of chore to "complete"
-    // get list of people who will be notified. (Everyone except the person the chore is assigned to)
-
-// APPROVING A COMPLETION (dep. MARKING A COMPLETION)
-
-  // status mst be marked as "complete". FAIL if status is different.
-  // date must be between day "completion" was raise and before 72 hours after that date. EG. if completion raised 26/02/25 , then rejection on 28/02/25 is valid, rejecton on 2/3/25 is not.
-    // Make sure leap years work :)
-
-  // If all above applies:
-    // add person who approved it to database
-
-// REJCTING A COMPLETION (dep. MARKING A COMPLETION)
-
-  // current status must be "complete". FAIL if satus is different.
-  // date must be between day "completion" was raise and before 72 hours after that date. EG. if completion raised 26/02/25 , then rejection on 28/02/25 is valid, rejecton on 2/3/25 is not.
-    // Make sure leap years work :)
-  
-  // data in completion
-    // person who made rejection must be in house
-    // person who made rejection cannot be the person who is assigned to the chore.
-    // reason for rejection cannot be NULL
-    // reason for rejection cannot exceed 100 characters (random number idfk)
-  
-  // if all above applies
-    // change status of chore
-    // get list of people who will be notified (the person the chore is assigned to)
-
-// CHORE ARCHIVAL (dep. MARKING A COMPLETION)
-
-// gonna finish tmrw :)
+    const response = await request(app).get("/house1/chores/todo/aaaabbbbccccddddeeeeffff")
+    expect(response.status).toBe(200);
+  })
 
 
+  test("Returns nothing when no chores left", async() => {
 
+    jest.spyOn(Chore, "find").mockResolvedValue(seedProducts)
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
 
+    const response = await request(app).get("/house1/chores/todo/111122223333444455556666")
+    expect(response.status).toBe(200);
+  })
 
+})
+
+describe("completed chores", () => {
+
+  let seedProducts: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    seedProducts =
+      [{
+        _id: new Types.ObjectId("123456789abcdef123456789"),
+        userID: [new Types.ObjectId("aaaabbbbccccddddeeeeffff"), new Types.ObjectId("111122223333444455556666")],
+        houseID: "house1",
+        description: "blah blah blah",
+        deadline: new Date('2025-03-29'),
+        dateAssigned: new Date(),
+        repeatEvery: 7,
+        status: 'complete',
+        completionAdded: null,
+        verifiedCount: 0
+      }]
+  })
+
+  test("Returns completed chores", async() => {
+
+    jest.spyOn(Chore, "find").mockResolvedValue(seedProducts)
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
+
+    const response = await request(app).get("/chores/completed")
+    expect(response.status).toBe(200);
+
+  })
+
+  test("Find specific chore Id", async() => {
+    jest.spyOn(Chore, "find").mockResolvedValue(seedProducts)
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
+
+    const response = await request(app).get("/chores/completed/123456789abdef123456789")
+    expect(response.status).toBe(404);
+  })
+
+  test("Return nothing if id does not exist", async() => {
+    jest.spyOn(Chore, "find").mockResolvedValue(new Error("Database error") as any)
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
+    const response = await request(app).get("/chores/completed/999988887777666655554444")
+    expect(response.status).toBe(200);
+  })
+
+})
+
+describe("VerifiedCount", () => {
+
+  let new_chore: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    new_chore =
+      [{
+        _id: new Types.ObjectId("123456789abcdef123456789"),
+        userID: [new Types.ObjectId("aaaabbbbccccddddeeeeffff"), new Types.ObjectId("111122223333444455556666")],
+        houseID: "house1",
+        description: "blah blah blah",
+        deadline: new Date('2025-03-29'),
+        dateAssigned: new Date(),
+        repeatEvery: 7,
+        status: 'complete',
+        completionAdded: null,
+        verifiedCount: 2
+      }]
+  })
+
+  test("Validcount increments on update. chore not yet complete", async () => {
+
+    jest.spyOn(Chore, "find").mockResolvedValue(new_chore)
+    jest.spyOn(Chore, "findByIdAndUpdate").mockImplementation((id: Types.ObjectId, params:any) => {
+      if (params.status === "incomplete"){
+        return Promise.resolve(null)
+      }
+      else if (params.status === "complete"){
+        return Promise.resolve(null)
+      }
+    })
+    jest.spyOn(app.response, "render").mockImplementation(() => {
+      return app.response.end;
+    });
+    jest.spyOn(axios, "post").mockImplementation(async (url:string, item:any) => {
+
+      if (url === "http://notifications-service:POST/notify"){
+        return null; // just post notification, we don't rly care
+      }
+      else if(url === "http://users-service/get-all-users-in-house/house1"){
+        let strArray:Array<string> = ["user1,user2,user3,user4"];
+        return strArray
+      }
+    })
+
+    const response = await request(app).put("/aaaabbbbccccddddeeeeffff/house1/chores/completed/123456789abcdef123456789")
+    expect(response.status).toBe(302);
+    expect(Chore.findOneAndUpdate)
+  })
+
+})

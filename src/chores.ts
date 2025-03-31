@@ -5,7 +5,7 @@ import express, {Express, Request, Response} from "express";
 import axios from "axios";
 // I have tried importing method override but I keep getting errors
 const methodOverride = require("method-override");
-const app = express();
+export const app = express();
 // DO NOT CHANGE THIS URL
 
 connectDB()
@@ -72,9 +72,10 @@ const rotaSchema = new mongoose.Schema({
 
 // Create documents
 
-const Chore = mongoose.model('Chore', choresSchema);
-const Issue = mongoose.model('Issue', issuesSchema);
-const Rota = mongoose.model('Rota', rotaSchema);
+export const Chore = mongoose.model('Chore', choresSchema);
+export const Issue = mongoose.model('Issue', issuesSchema);
+export const Rota = mongoose.model('Rota', rotaSchema);
+
 
 app.use(express.urlencoded({extended: true}))
 app.use(methodOverride('_method'))
@@ -82,9 +83,10 @@ app.use(methodOverride('_method'))
 // Get all chores
 
 app.get('/:houseid/chores', async (req: Request, res: Response) => {
-
-    const chores = await Chore.find({houseID: req.params})
+    const chores = await Chore.find({houseID: req.params.houseID})
     res.render('chores/index', {chores})
+    res.status(200).send("success");
+    return;
 })
 
 // Get all chores that the current user needs to do
@@ -94,21 +96,36 @@ app.get('/:houseid/chores/todo/:userid', async(req: Request, res: Response) => {
     const houseid = req.params.houseid;
     const todo = Chore.find({'status': 'incomplete', 'userID': userid, 'houseID': houseid})
     res.render('chores/index', {todo})
+    res.status(200).send("success");
+    return;
 })
 
 // Get all chores that everyone in a household has completed
 
 app.get('/chores/completed', async(req: Request, res: Response) => {
+    
     const completed = Chore.find({'status': 'complete', 'completionAdded' : {$gte: new Date()}})
     res.render('chores/index', {completed})
+    res.status(200).send("success")
+    return;
 })
 
 // Get a specific chore from the completed page
 
 app.get('/chores/completed/:id', async(req: Request, res: Response) => {
-    const {id} = req.params;
-    const completedChore = await Chore.findById(id);
-    res.render('chores/index', {completedChore})
+
+    try{
+        const {id} = req.params;
+        const completedChore = await Chore.findById(id);
+        res.render('chores/index', {completedChore})
+        res.status(200).send("success")
+        return;
+    }
+    catch{
+        res.status(404).send("error: no such choreid exists");
+        return;
+    }
+    
 })
 
 // Other users can contest whether a chore was completed or not
@@ -117,14 +134,19 @@ app.get('/chores/completed/:id/confirmation', async(req: Request, res: Response)
     const {id} = req.params;
     const completedChore = await Chore.findById(id);
     res.render('chores/index', {completedChore})
+    res.status(200).send("success")
+    return;
 })
 
 // Updates VerifiedCount depending on whether user confirms or rejects task completion
 
-app.put(':userid/:houseid/chores/completed/:id', async(req: Request, res: Response) => {
+app.put('/:userid/:houseid/chores/completed/:id', async(req: Request, res: Response) => {
+    console.log("hello")
     const id = req.params.id;
     const userid = req.params.userid;
+    const houseid = req.params.houseid;
     const data = req.body;
+    console.log("make it here")
     if (data.confirm === "True") {
         const chore = await Chore.findByIdAndUpdate(id, {$inc: {verifiedCount: 1}})
     } else if (data.confirm === "False") {
@@ -136,15 +158,28 @@ app.put(':userid/:houseid/chores/completed/:id', async(req: Request, res: Respon
             res.redirect("/chores/completed")
         }
     }
+    console.log("make it post data.confirm")
+
+    // THIS CODE INTERACTS WITH THE USER SERVICE IN THEORY
+    // COMMENT OUT IF BAD
+
+    const users_in_house:Array<string> = await axios.post('http://users-service/get-all-users-in-house/' + houseid)
+    const no_users_in_house = users_in_house.length
+
+    // const no_users_in_house = 5 // uncomment if service is down so that thing works
+
+    console.log("made it to verified")
 
     const verified = await Chore.findById(id).get("verifiedCount")
-    if (verified < 0){
+    if (verified < no_users_in_house){
         const chore = await Chore.findByIdAndUpdate(id, {"status": "incomplete"});
-        await axios.post('http://notifications-service:POST/notify', chore);
+        await axios.post('http://notifications-service:POST/notify', chore); // do we want to notify when chore is complete, rather than not complete?
     } else {
         const chore = await Chore.findByIdAndUpdate(id, {"status": "complete"});
     }
     res.redirect('/chores/completed/:id/')
+    console.log("made it to end")
+    return;
 })
 
 // User can create a new chore on this page
