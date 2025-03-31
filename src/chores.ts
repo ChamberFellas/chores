@@ -1,7 +1,8 @@
 import { number, Schema } from "zod";
 import { connectDB, disconnectDB} from "./database";
 import mongoose, { mongo, Types } from "mongoose";
-import express, {Express, Request, Response} from "express";
+import express = require('express');
+import {Express, Request, Response} from "express";
 import axios from "axios";
 // I have tried importing method override but I keep getting errors
 const methodOverride = require("method-override");
@@ -206,9 +207,17 @@ app.put('/chores/todo/:id', async (req: Request, res: Response) => {
             const description = data.description;
             const repeat = data.repeat;
             const dateAssigned = new Date();
-            dateAssigned.setDate(data.dateassigned + repeat);
             const deadline = new Date();
-            deadline.setDate(data.deadline + repeat);
+            if (data.dateAssigned === 'Weekly') {
+                dateAssigned.setDate(data.dateassigned + 7);
+                deadline.setDate(data.deadline + 7);
+            } else if (data.dateassigned === 'Biweekly') {
+                dateAssigned.setDate(data.dateassigned + 14);
+                deadline.setDate(data.deadline + 14);
+            } else if (data.dateassigned === 'Monthly') {
+                dateAssigned.setDate(data.dateassigned.getMonth() + 1);
+                deadline.setDate(data.deadline.getMonth() + 1);
+            }
             const newChore = new Chore({userid, houseid, description, deadline, dateAssigned, repeat})
             await newChore.save();
             await axios.post('http://notifications-service:POST/notify', newChore);
